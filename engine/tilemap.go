@@ -46,3 +46,15 @@ func (tm *TileMap) Draw(dst *ebiten.Image) {
 		}
 	}
 }
+
+func (tm *TileMap) TileAt(x, y int) int {
+	col := x / tm.TileSize
+	row := y / tm.TileSize
+
+	idx := row*tm.Width + col
+	if idx < 0 || idx > len(tm.Tiles)-1 {
+		return -1
+	}
+
+	return tm.Tiles[row*tm.Width+col]
+}

@@ -13,7 +13,7 @@ import (
 //go:embed assets/tilesets/*.png
 var TileSetAssetsFS embed.FS
 
-//go:embed assets/backgrounds/*.png
+//go:embed assets/static/*.png
 var StaticImageFS embed.FS
 
 func LoadImageFile(fs embed.FS, file string) *ebiten.Image {

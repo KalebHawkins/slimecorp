@@ -1,6 +1,7 @@
 package engine
 
 const (
+	OUT_OF_MAP         = -1
 	NO_TILE            = 0
 	PLATFORM_TILE      = 101
 	PLATFORM_TILE_DARK = 150
