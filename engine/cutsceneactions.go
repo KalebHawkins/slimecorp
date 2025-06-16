@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"image/color"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -85,6 +87,7 @@ func (ta *TextAction) Draw(dst *ebiten.Image) {
 	top.LineSpacing = 12
 	top.PrimaryAlign = text.AlignCenter
 
+	top.ColorScale.ScaleWithColor(color.Black)
 	top.GeoM.Translate(ta.Position.X, ta.Position.Y)
 	text.Draw(dst, ta.Text, ta.FontFace, top)
 }

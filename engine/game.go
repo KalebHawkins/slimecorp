@@ -19,6 +19,7 @@ type Config struct {
 type Game struct {
 	CurrentGameState GameState
 	Config           *Config
+	OffScreen        *ebiten.Image
 }
 
 func NewGame(scrWidth, scrHeight int) *Game {
@@ -28,6 +29,7 @@ func NewGame(scrWidth, scrHeight int) *Game {
 			ScreenWidth:  scrWidth,
 			ScreenHeight: scrHeight,
 		},
+		OffScreen: ebiten.NewImage(scrWidth, scrHeight),
 	}
 
 	s, err := text.NewGoTextFaceSource(bytes.NewReader(goregular.TTF))
@@ -38,7 +40,7 @@ func NewGame(scrWidth, scrHeight int) *Game {
 	g.Config.FontFaceSource = s
 	g.Config.FontFace = &text.GoTextFace{
 		Source: s,
-		Size:   12,
+		Size:   14,
 	}
 
 	g.CurrentGameState = NewCombatState(g.Config)
@@ -53,9 +55,19 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.CurrentGameState.Draw(screen)
+	g.OffScreen.Clear()
+	g.CurrentGameState.Draw(g.OffScreen)
+
+	screenSize := screen.Bounds().Size()
+	op := &ebiten.DrawImageOptions{}
+	scaleX := float64(screenSize.X) / float64(g.Config.ScreenWidth)
+	scaleY := float64(screenSize.Y) / float64(g.Config.ScreenHeight)
+	op.GeoM.Scale(scaleX, scaleY)
+
+	screen.DrawImage(g.OffScreen, op)
+
 }
 
 func (g *Game) Layout(outWidth, outHeight int) (int, int) {
-	return outWidth, outHeight
+	return g.Config.ScreenWidth, g.Config.ScreenHeight
 }

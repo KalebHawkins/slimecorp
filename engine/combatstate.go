@@ -26,9 +26,9 @@ type CombatState struct {
 
 func NewCombatState(cfg *Config) *CombatState {
 	cs := &CombatState{
-		TileMap:                 NewTileMap(40, 30, 16, JungleMap, LoadImageFile(TileSetAssetsFS, "tilesets/jungle.png")),
+		TileMap:                 NewTileMap(20, 15, 16, JungleMap, LoadImageFile(TileSetAssetsFS, "tilesets/jungle.png")),
 		Config:                  cfg,
-		Player:                  NewPlayer(&Vector2{float64(cfg.ScreenWidth) / 4, 408}, ebiten.NewImage(16, 16)),
+		Player:                  NewPlayer(&Vector2{float64(cfg.ScreenWidth) / 4, 170}, ebiten.NewImage(16, 16)),
 		BackGroundImages:        []*ebiten.Image{},
 		Gravity:                 0.918,
 		PlayerJumpImpulse:       10.0,
@@ -38,7 +38,7 @@ func NewCombatState(cfg *Config) *CombatState {
 		PlayerAccelerationSpeed: 1.0,
 		IsPlayerOnGround:        false,
 		VelocityDampening:       0.9,
-		Adventurer:              NewAdventurer(&Vector2{float64(cfg.ScreenWidth) + 20, 400}, LoadImageFile(StaticImageFS, "static/adventurer_idle.png")),
+		Adventurer:              NewAdventurer(&Vector2{float64(cfg.ScreenWidth) + 40, 162}, LoadImageFile(StaticImageFS, "static/adventurer_idle.png")),
 	}
 
 	for i := 1; i <= 5; i++ {
@@ -46,22 +46,22 @@ func NewCombatState(cfg *Config) *CombatState {
 		cs.BackGroundImages = append(cs.BackGroundImages, LoadImageFile(StaticImageFS, "static/"+imgName))
 	}
 
-	MoveAdventurer := &MoveAction{
-		Character:     cs.Adventurer,
-		StartPosition: cs.Adventurer.Position,
-		EndPosition:   &Vector2{float64(cfg.ScreenWidth) / 1.5, 450},
-		Speed:         1.0,
-		done:          false,
-	}
-	WaitAction := &WaitAction{
-		Character: cs.Adventurer,
-		WaitTime:  1.0,
-	}
-
 	cs.CutSceneEngine = &CutSceneEngine{
 		Actions: []CutSceneAction{
-			MoveAdventurer,
-			WaitAction,
+			&MoveAction{
+				Character:     cs.Adventurer,
+				StartPosition: cs.Adventurer.Position,
+				EndPosition:   &Vector2{float64(cfg.ScreenWidth) / 1.5, 162},
+				Speed:         1.0,
+				done:          false,
+			},
+			&TextAction{
+				Position:       &Vector2{float64(cfg.ScreenWidth) / 1.5, 120},
+				Text:           "Oh look another slime...\nHehe, TIME TO DIE!",
+				FontFace:       cs.Config.FontFace,
+				FontFaceSource: cs.Config.FontFaceSource,
+				WaitTime:       3.0,
+			},
 		},
 	}
 

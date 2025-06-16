@@ -17,7 +17,7 @@ func NewPlayer(position *Vector2, sprite *ebiten.Image) *Player {
 		Sprite:   sprite,
 	}
 
-	sprite.Fill(color.RGBA{0, 0, 255, 255})
+	sprite.Fill(color.RGBA{255, 128, 20, 255})
 	return p
 }
 
