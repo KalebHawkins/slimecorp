@@ -1,19 +1,47 @@
 package engine
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"bytes"
+	"log"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"golang.org/x/image/font/gofont/goregular"
+)
+
+type Config struct {
+	ScreenWidth    int
+	ScreenHeight   int
+	FontFace       *text.GoTextFace
+	FontFaceSource *text.GoTextFaceSource
+}
 
 type Game struct {
-	ScreenWidth      int
-	ScreenHeight     int
 	CurrentGameState GameState
+	Config           *Config
 }
 
 func NewGame(scrWidth, scrHeight int) *Game {
 	g := &Game{
-		ScreenWidth:      scrWidth,
-		ScreenHeight:     scrHeight,
-		CurrentGameState: NewCombatState(scrWidth, scrHeight),
+		CurrentGameState: nil,
+		Config: &Config{
+			ScreenWidth:  scrWidth,
+			ScreenHeight: scrHeight,
+		},
 	}
+
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(goregular.TTF))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	g.Config.FontFaceSource = s
+	g.Config.FontFace = &text.GoTextFace{
+		Source: s,
+		Size:   12,
+	}
+
+	g.CurrentGameState = NewCombatState(g.Config)
 
 	return g
 }

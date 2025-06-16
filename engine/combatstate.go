@@ -8,28 +8,27 @@ import (
 )
 
 type CombatState struct {
-	ScreenWidth, ScreenHeight int
-	BackGroundImages          []*ebiten.Image
-	TileMap                   *TileMap
-	Player                    *Player
-	Gravity                   float64
-	PlayerAcceleration        *Vector2
-	PlayerVelocity            *Vector2
-	MaxPlayerVelocity         *Vector2
-	PlayerJumpImpulse         float64
-	PlayerAccelerationSpeed   float64
-	VelocityDampening         float64
-	IsPlayerOnGround          bool
-	CutSceneEngine            *CutSceneEngine
-	Adventurer                *Adventurer
+	Config                  *Config
+	BackGroundImages        []*ebiten.Image
+	TileMap                 *TileMap
+	Player                  *Player
+	Gravity                 float64
+	PlayerAcceleration      *Vector2
+	PlayerVelocity          *Vector2
+	MaxPlayerVelocity       *Vector2
+	PlayerJumpImpulse       float64
+	PlayerAccelerationSpeed float64
+	VelocityDampening       float64
+	IsPlayerOnGround        bool
+	CutSceneEngine          *CutSceneEngine
+	Adventurer              *Adventurer
 }
 
-func NewCombatState(scrWidth, scrHeight int) *CombatState {
+func NewCombatState(cfg *Config) *CombatState {
 	cs := &CombatState{
 		TileMap:                 NewTileMap(40, 30, 16, JungleMap, LoadImageFile(TileSetAssetsFS, "tilesets/jungle.png")),
-		ScreenWidth:             scrWidth,
-		ScreenHeight:            scrHeight,
-		Player:                  NewPlayer(&Vector2{float64(scrWidth) / 2, float64(scrHeight) / 2}, ebiten.NewImage(16, 16)),
+		Config:                  cfg,
+		Player:                  NewPlayer(&Vector2{float64(cfg.ScreenWidth) / 4, 408}, ebiten.NewImage(16, 16)),
 		BackGroundImages:        []*ebiten.Image{},
 		Gravity:                 0.918,
 		PlayerJumpImpulse:       10.0,
@@ -39,7 +38,7 @@ func NewCombatState(scrWidth, scrHeight int) *CombatState {
 		PlayerAccelerationSpeed: 1.0,
 		IsPlayerOnGround:        false,
 		VelocityDampening:       0.9,
-		Adventurer:              NewAdventurer(&Vector2{float64(scrWidth) + 20, 400}, LoadImageFile(StaticImageFS, "static/adventurer_idle.png")),
+		Adventurer:              NewAdventurer(&Vector2{float64(cfg.ScreenWidth) + 20, 400}, LoadImageFile(StaticImageFS, "static/adventurer_idle.png")),
 	}
 
 	for i := 1; i <= 5; i++ {
@@ -47,17 +46,22 @@ func NewCombatState(scrWidth, scrHeight int) *CombatState {
 		cs.BackGroundImages = append(cs.BackGroundImages, LoadImageFile(StaticImageFS, "static/"+imgName))
 	}
 
-	introAction := &MoveAction{
+	MoveAdventurer := &MoveAction{
 		Character:     cs.Adventurer,
 		StartPosition: cs.Adventurer.Position,
-		EndPosition:   &Vector2{float64(scrWidth) / 1.5, 450},
+		EndPosition:   &Vector2{float64(cfg.ScreenWidth) / 1.5, 450},
 		Speed:         1.0,
 		done:          false,
+	}
+	WaitAction := &WaitAction{
+		Character: cs.Adventurer,
+		WaitTime:  1.0,
 	}
 
 	cs.CutSceneEngine = &CutSceneEngine{
 		Actions: []CutSceneAction{
-			introAction,
+			MoveAdventurer,
+			WaitAction,
 		},
 	}
 
@@ -112,7 +116,7 @@ func (cs *CombatState) Update() error {
 	}
 
 	// Don't let the player leave the window.
-	cs.Player.Position.X = Clamp(cs.Player.Position.X, float64(cs.Player.Sprite.Bounds().Dx()/2), float64(cs.ScreenWidth)-float64(cs.Player.Sprite.Bounds().Dy())/2)
+	cs.Player.Position.X = Clamp(cs.Player.Position.X, float64(cs.Player.Sprite.Bounds().Dx()/2), float64(cs.Config.ScreenWidth)-float64(cs.Player.Sprite.Bounds().Dy())/2)
 
 	// fmt.Printf("[DEBUG] Player Acceleration: (%.2f, %.2f), Player Velocity: (%.2f, %.2f), Player Position: (%f, %f)\n",
 	// 	cs.PlayerAcceleration.X, cs.PlayerAcceleration.Y, cs.PlayerVelocity.X, cs.PlayerVelocity.Y, cs.Player.Position.X, cs.Player.Position.Y)
@@ -123,8 +127,8 @@ func (cs *CombatState) Update() error {
 func (cs *CombatState) Draw(dst *ebiten.Image) {
 	for _, bgImg := range cs.BackGroundImages {
 		imgsize := bgImg.Bounds().Size()
-		scaleX := float64(cs.ScreenWidth) / float64(imgsize.X)
-		scaleY := float64(cs.ScreenHeight) / float64(imgsize.Y)
+		scaleX := float64(cs.Config.ScreenWidth) / float64(imgsize.X)
+		scaleY := float64(cs.Config.ScreenHeight) / float64(imgsize.Y)
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(scaleX, scaleY)
@@ -133,13 +137,13 @@ func (cs *CombatState) Draw(dst *ebiten.Image) {
 
 	cs.TileMap.Draw(dst)
 
+	cs.Adventurer.Draw(dst)
+	cs.Player.Draw(dst)
+
 	if cs.CutSceneEngine != nil && !cs.CutSceneEngine.IsCutSceneOver {
 		cs.CutSceneEngine.Draw(dst)
 		return
 	}
-
-	cs.Adventurer.Draw(dst)
-	cs.Player.Draw(dst)
 }
 
 func (cs *CombatState) CheckCollisions() {
@@ -157,7 +161,7 @@ func (cs *CombatState) CheckCollisions() {
 
 	switch tileId {
 	case OUT_OF_MAP:
-		cs.Player.Position.X = float64(cs.ScreenWidth) / 2
+		cs.Player.Position.X = float64(cs.Config.ScreenWidth) / 2
 		cs.Player.Position.Y = 0
 	case PLATFORM_TILE:
 		cs.PlayerVelocity.Y = Clamp(cs.PlayerVelocity.Y, -cs.MaxPlayerVelocity.Y, 0)

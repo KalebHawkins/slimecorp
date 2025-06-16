@@ -1,6 +1,9 @@
 package engine
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
+)
 
 type CutSceneAction interface {
 	Update() bool
@@ -33,10 +36,55 @@ func (ma *MoveAction) Update() bool {
 		ma.done = true
 	}
 
+	if adventurer, ok := ma.Character.(*Adventurer); ok {
+		adventurer.FacingDirection = ma.Direction
+	}
+
 	ma.Character.SetPosition(&Vector2{nextX, ma.StartPosition.Y})
 	return ma.done
 }
 
 func (ma *MoveAction) Draw(dst *ebiten.Image) {
 	ma.Character.Draw(dst)
+}
+
+type WaitAction struct {
+	Character Character
+	Frames    int
+	WaitTime  int
+}
+
+func (wa *WaitAction) Update() bool {
+	wa.Frames++
+
+	elapsed := 1.0 / ebiten.ActualTPS() * float64(wa.Frames)
+	return elapsed >= float64(wa.WaitTime)
+}
+
+func (wa *WaitAction) Draw(dst *ebiten.Image) {
+	wa.Character.Draw(dst)
+}
+
+type TextAction struct {
+	Position       *Vector2
+	Text           string
+	FontFace       *text.GoTextFace
+	FontFaceSource *text.GoTextFaceSource
+	WaitTime       int
+	Frames         int
+}
+
+func (ta *TextAction) Update() bool {
+	ta.Frames++
+	elapsed := 1.0 / ebiten.ActualTPS() * float64(ta.Frames)
+	return elapsed >= float64(ta.WaitTime)
+}
+
+func (ta *TextAction) Draw(dst *ebiten.Image) {
+	top := &text.DrawOptions{}
+	top.LineSpacing = 12
+	top.PrimaryAlign = text.AlignCenter
+
+	top.GeoM.Translate(ta.Position.X, ta.Position.Y)
+	text.Draw(dst, ta.Text, ta.FontFace, top)
 }
